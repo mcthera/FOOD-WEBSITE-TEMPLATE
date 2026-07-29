@@ -151,7 +151,7 @@ async function initializeFirestoreData() {
     }
 }
 
-// Admin Authentication Setup (Fixed element checking & duplication)
+// Admin Authentication Setup
 function setupAdminAuth() {
     const loginModal = document.getElementById('admin-login-modal');
     const loginForm = document.getElementById('login-form');
@@ -163,35 +163,7 @@ function setupAdminAuth() {
 
     const ADMIN_PASSWORD = "CATERING";
 
-    if (sessionStorage.getItem('isAdminAuthenticated') === 'true') {
-        if (loginModal) loginModal.style.display = 'none';
-        if (sidebar) sidebar.style.display = 'block';
-        if (mainContent) mainContent.style.display = 'block';
-        initRealtimeAdminDashboard();
-        setupAdminTabs();
-        setupAddMenuForm();
-        return;
-    }
-
-    if (loginForm) {
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const enteredPassword = passwordInput ? passwordInput.value.trim() : "";
-            if (enteredPassword === ADMIN_PASSWORD) {
-                sessionStorage.setItem('isAdminAuthenticated', 'true');
-                if (loginModal) loginModal.style.display = 'none';
-                if (sidebar) sidebar.style.display = 'block';
-                if (mainContent) mainContent.style.display = 'block';
-                initRealtimeAdminDashboard();
-                setupAdminTabs();
-                setupAddMenuForm();
-            } else {
-                if (loginError) loginError.style.display = 'block';
-                if (passwordInput) passwordInput.value = '';
-            }
-        });
-    }
-
+    // Always attach the logout listener immediately when setupAdminAuth runs
     if (logoutBtn) {
         logoutBtn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -199,6 +171,31 @@ function setupAdminAuth() {
             window.location.reload();
         });
     }
+
+    if (sessionStorage.getItem('isAdminAuthenticated') === 'true') {
+        loginModal.style.display = 'none';
+        sidebar.style.display = 'block';
+        mainContent.style.display = 'block';
+        initRealtimeAdminDashboard();
+        setupAdminTabs();
+        setupAddMenuForm();
+    }
+
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (passwordInput.value === ADMIN_PASSWORD) {
+            sessionStorage.setItem('isAdminAuthenticated', 'true');
+            loginModal.style.display = 'none';
+            sidebar.style.display = 'block';
+            mainContent.style.display = 'block';
+            initRealtimeAdminDashboard();
+            setupAdminTabs();
+            setupAddMenuForm();
+        } else {
+            loginError.style.display = 'block';
+            passwordInput.value = '';
+        }
+    });
 }
 
 // Render Menu from Firestore
