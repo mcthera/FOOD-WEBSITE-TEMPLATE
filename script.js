@@ -239,7 +239,7 @@ function removeFromCart(id) {
     renderCartItems();
 }
 
-// Handle Checkout and save order directly to Firestore
+// Handle Checkout: Saves order directly to Firebase in real-time, then opens WhatsApp
 async function handleCheckout() {
     const cart = getCart();
     if (cart.length === 0) {
@@ -250,29 +250,36 @@ async function handleCheckout() {
     let total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
     let itemsSummary = cart.map(i => `${i.name} (${i.qty})`).join(', ');
 
+    // Generate a unique sequential-looking Order ID
+    const randomOrdNum = Math.floor(1000 + Math.random() * 9000);
+    const orderIdCode = `ORD-${randomOrdNum}`;
+
     const newOrder = {
-        orderId: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
-        customer: "Online Customer",
+        orderId: orderIdCode,
+        customer: "Online Customer (WhatsApp)",
         items: itemsSummary,
         total: total,
-        status: "Pending",
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        status: "Pending", // Starts as Pending for your kitchen staff
+        createdAt: firebase.firestore.FieldValue.serverTimestamp() // Real-time timestamp
     };
 
     try {
+        // 1. Save directly to Firebase Firestore database
         await db.collection('orders').add(newOrder);
         
-        // Clear cart
+        // 2. Clear customer session cart
         sessionStorage.removeItem('cart');
         updateCartCount();
 
-        // WhatsApp redirection
-        const phone = "233541604633";
-        const message = encodeURIComponent(`Hello Daytime Meals, I want to place an order:%0A${itemsSummary}%0ATotal: GH₵ ${total.toFixed(2)}`);
+        // 3. Redirect user to WhatsApp Business line with the order details
+        const phone = "233541604633"; // Your business phone number
+        const message = encodeURIComponent(`Hello Daytime Meals, I just placed an order on your website:\n\nOrder ID: ${orderIdCode}\nItems: ${itemsSummary}\nTotal: GH₵ ${total.toFixed(2)}\n\nPlease confirm my delivery.`);
+        
         window.location.href = `https://wa.me/${phone}?text=${message}`;
+        
     } catch (error) {
-        console.error("Error submitting order: ", error);
-        alert("There was an error processing your order. Please try again.");
+        console.error("Error submitting order to database: ", error);
+        alert("There was an error processing your order. Please try again or call us directly.");
     }
 }
 
