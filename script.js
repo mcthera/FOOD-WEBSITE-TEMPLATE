@@ -23,7 +23,7 @@ const defaultMenu = [
     { id: 5, name: "Affordable Daily Lunch Pack", category: "Packages", price: 35, image: "FD.jpeg" }
 ];
 
-// Helper: Cart stays in local session storage for seamless user UX across pages
+// Helper: Cart stays in session storage for seamless user UX across pages
 function getCart() { return JSON.parse(sessionStorage.getItem('cart')) || []; }
 function saveCart(cart) { sessionStorage.setItem('cart', JSON.stringify(cart)); }
 
@@ -178,7 +178,7 @@ function setupFilters() {
     });
 }
 
-// Cart Logic using Session Storage
+// Cart Logic
 function addToCart(id, name, price) {
     let cart = getCart();
     const existing = cart.find(c => c.id === id);
@@ -239,7 +239,7 @@ function removeFromCart(id) {
     renderCartItems();
 }
 
-// Handle Checkout: Saves order directly to Firebase in real-time, then opens WhatsApp
+// Handle Checkout: Saves order directly to Firestore FIRST, then triggers WhatsApp
 async function handleCheckout() {
     const cart = getCart();
     if (cart.length === 0) {
@@ -250,7 +250,6 @@ async function handleCheckout() {
     let total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
     let itemsSummary = cart.map(i => `${i.name} (${i.qty})`).join(', ');
 
-    // Generate a unique sequential-looking Order ID
     const randomOrdNum = Math.floor(1000 + Math.random() * 9000);
     const orderIdCode = `ORD-${randomOrdNum}`;
 
@@ -259,27 +258,25 @@ async function handleCheckout() {
         customer: "Online Customer (WhatsApp)",
         items: itemsSummary,
         total: total,
-        status: "Pending", // Starts as Pending for your kitchen staff
-        createdAt: firebase.firestore.FieldValue.serverTimestamp() // Real-time timestamp
+        status: "Pending",
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
     };
 
     try {
-        // 1. Save directly to Firebase Firestore database
+        // Save order directly to Firestore so it reflects on the dashboard instantly
         await db.collection('orders').add(newOrder);
         
-        // 2. Clear customer session cart
+        // Clear cart session
         sessionStorage.removeItem('cart');
         updateCartCount();
 
-        // 3. Redirect user to WhatsApp Business line with the order details
-        const phone = "233541604633"; // Your business phone number
+        // Redirect to WhatsApp Business line
+        const phone = "233541604633";
         const message = encodeURIComponent(`Hello Daytime Meals, I just placed an order on your website:\n\nOrder ID: ${orderIdCode}\nItems: ${itemsSummary}\nTotal: GH₵ ${total.toFixed(2)}\n\nPlease confirm my delivery.`);
-        
         window.location.href = `https://wa.me/${phone}?text=${message}`;
-        
     } catch (error) {
         console.error("Error submitting order to database: ", error);
-        alert("There was an error processing your order. Please try again or call us directly.");
+        alert("There was an error processing your order. Please try again.");
     }
 }
 
@@ -288,7 +285,7 @@ async function handleCheckout() {
 // ==========================================
 function initRealtimeAdminDashboard() {
     // Real-time listener for Orders
-    db.collection('orders').onSnapshot(orderSnapshot => {
+    db.collection('orders').orderBy('createdAt', 'desc').onSnapshot(orderSnapshot => {
         let orders = [];
         orderSnapshot.forEach(doc => orders.push({ docId: doc.id, ...doc.data() }));
 
@@ -301,7 +298,7 @@ function initRealtimeAdminDashboard() {
         const totalRevEl = document.getElementById('stat-total-revenue');
         if (totalRevEl) totalRevEl.innerText = `GH₵ ${revenue.toFixed(2)}`;
 
-        // Render Orders Table with Live Status Selection Dropdown
+        // Render Orders Table with Status Select and Delete Action Button
         const ordersList = document.getElementById('admin-orders-list');
         if (ordersList) {
             ordersList.innerHTML = '';
@@ -320,6 +317,11 @@ function initRealtimeAdminDashboard() {
                             <option value="Delivered" ${o.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
                         </select>
                     </td>
+                    <td>
+                        <button onclick="deleteOrder('${o.docId}')" class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.8rem; background-color: #fff1f1; color: red; border-color: #ffcccc; cursor: pointer;">
+                            <i class="fa-solid fa-trash"></i> Delete
+                        </button>
+                    </td>
                 `;
                 ordersList.appendChild(tr);
             });
@@ -331,11 +333,9 @@ function initRealtimeAdminDashboard() {
         let menu = [];
         menuSnapshot.forEach(doc => menu.push({ docId: doc.id, ...doc.data() }));
 
-        // Update Menu Item Count Metric
         const totalMenuEl = document.getElementById('stat-total-menu');
         if (totalMenuEl) totalMenuEl.innerText = menu.length;
 
-        // Render Admin Menu Grid
         const adminMenuList = document.getElementById('admin-menu-list');
         if (adminMenuList) {
             adminMenuList.innerHTML = '';
@@ -363,6 +363,18 @@ async function updateOrderStatus(docId, newStatus) {
     } catch (error) {
         console.error("Error updating order status: ", error);
         alert("Failed to update status.");
+    }
+}
+
+// Function to delete an order from Firebase Firestore
+async function deleteOrder(docId) {
+    if (confirm('Are you sure you want to delete this order record?')) {
+        try {
+            await db.collection('orders').doc(docId).delete();
+        } catch (error) {
+            console.error("Error deleting order: ", error);
+            alert("Failed to delete order.");
+        }
     }
 }
 
