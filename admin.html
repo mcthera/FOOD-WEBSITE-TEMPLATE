@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
 <body class="admin-body">
 
@@ -22,57 +22,47 @@
                 <button type="submit" class="btn btn-primary btn-block">Login</button>
             </form>
             <p id="login-error" style="color: red; margin-top: 10px; display: none;">Incorrect password!</p>
-            <a href="index.html" style="display: block; margin-top: 15px; text-align: center; color: #777; text-decoration: none;">&larr; Back to Website</a>
+            <a href="index.html" style="display: block; margin-top: 15px; font-size: 0.9rem; color: var(--primary-red);">← Back to Home</a>
         </div>
     </div>
 
-    <aside class="sidebar" id="admin-sidebar" style="display: none;">
-        <h2>Daytime Admin</h2>
+    <aside id="admin-sidebar" class="sidebar" style="display: none;">
+        <h2>Admin Panel</h2>
         <ul>
-            <li><a href="#" class="tab-link active" data-target="dashboard-tab"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
-            <li><a href="#" class="tab-link" data-target="orders-tab"><i class="fa-solid fa-receipt"></i> Orders</a></li>
-            <li><a href="#" class="tab-link" data-target="menu-manage-tab"><i class="fa-solid fa-bowl-food"></i> Manage Menu</a></li>
+            <li><a href="#" class="tab-link active" data-target="orders-tab"><i class="fa-solid fa-list-check"></i> Orders</a></li>
+            <li><a href="#" class="tab-link" data-target="menu-manage-tab"><i class="fa-solid fa-utensils"></i> Manage Menu</a></li>
+            <li><a href="index.html"><i class="fa-solid fa-globe"></i> View Website</a></li>
             <li><a href="#" id="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
-            <li><a href="index.html"><i class="fa-solid fa-arrow-left"></i> Back to Website</a></li>
         </ul>
     </aside>
 
-    <main class="admin-main" id="admin-main-content" style="display: none;">
+    <main id="admin-main-content" class="admin-main" style="display: none;">
         <header class="admin-header">
-            <h2>Dashboard Overview</h2>
-            <span>Welcome, Admin</span>
+            <div>
+                <h1>Dashboard Overview</h1>
+                <p>Welcome back, Admin.</p>
+            </div>
         </header>
 
-        <div id="dashboard-tab" class="admin-tab active">
+        <div id="orders-tab" class="admin-tab active">
             <div class="stats-grid">
                 <div class="stat-card">
-                    <i class="fa-solid fa-shopping-bag"></i>
-                    <div>
-                        <h3 id="stat-total-orders">0</h3>
-                        <p>Total Orders</p>
-                    </div>
+                    <h3>Total Orders</h3>
+                    <p id="stat-total-orders">0</p>
                 </div>
                 <div class="stat-card">
-                    <i class="fa-solid fa-cedi-sign"></i>
-                    <div>
-                        <h3 id="stat-total-revenue">GH₵ 0.00</h3>
-                        <p>Total Revenue</p>
-                    </div>
+                    <h3>Total Revenue</h3>
+                    <p id="stat-total-revenue">GH₵ 0.00</p>
                 </div>
                 <div class="stat-card">
-                    <i class="fa-solid fa-utensils"></i>
-                    <div>
-                        <h3 id="stat-total-menu">0</h3>
-                        <p>Menu Items</p>
-                    </div>
+                    <h3>Menu Items</h3>
+                    <p id="stat-total-menu">0</p>
                 </div>
             </div>
-        </div>
 
-        <div id="orders-tab" class="admin-tab">
-            <h3>Customer Orders</h3>
-            <div class="table-container">
-                <table>
+            <h3 style="margin-top: 30px;">Customer Orders</h3>
+            <div class="table-responsive">
+                <table class="admin-table">
                     <thead>
                         <tr>
                             <th>Order ID</th>
@@ -80,10 +70,10 @@
                             <th>Items</th>
                             <th>Total</th>
                             <th>Status</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="admin-orders-list">
-                        </tbody>
+                    <tbody id="admin-orders-list"></tbody>
                 </table>
             </div>
         </div>
@@ -115,10 +105,13 @@
             </form>
 
             <h3 style="margin-top: 40px;">Existing Menu Items</h3>
-            <div id="admin-menu-list" class="admin-menu-grid">
-                </div>
+            <div id="admin-menu-list" class="admin-menu-grid"></div>
         </div>
     </main>
+
+    <a href="https://wa.me/233541604633?text=Hello%20Daytime%20Meals,%20I%20would%20like%20to%20make%20an%20inquiry." class="global-whatsapp-float" target="_blank" rel="noopener noreferrer">
+        <i class="fa-brands fa-whatsapp"></i>
+    </a>
 
     <script src="script.js"></script>
 </body>
