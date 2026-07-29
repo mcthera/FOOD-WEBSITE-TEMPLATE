@@ -102,7 +102,7 @@ function setupAdminAuth() {
         loginModal.style.display = 'none';
         sidebar.style.display = 'block';
         mainContent.style.display = 'block';
-        renderAdminDashboard();
+        initRealtimeAdminDashboard();
         setupAdminTabs();
         setupAddMenuForm();
     }
@@ -114,7 +114,7 @@ function setupAdminAuth() {
             loginModal.style.display = 'none';
             sidebar.style.display = 'block';
             mainContent.style.display = 'block';
-            renderAdminDashboard();
+            initRealtimeAdminDashboard();
             setupAdminTabs();
             setupAddMenuForm();
         } else {
@@ -276,29 +276,25 @@ async function handleCheckout() {
     }
 }
 
-// Admin Dashboard Logic connected to Firestore
-async function renderAdminDashboard() {
-    try {
-        const ordersSnapshot = await db.collection('orders').orderBy('createdAt', 'desc').get();
+// ==========================================
+// REAL-TIME ADMIN DASHBOARD (LIVE LISTENERS)
+// ==========================================
+function initRealtimeAdminDashboard() {
+    // Real-time listener for Orders
+    db.collection('orders').onSnapshot(orderSnapshot => {
         let orders = [];
-        ordersSnapshot.forEach(doc => orders.push({ docId: doc.id, ...doc.data() }));
+        orderSnapshot.forEach(doc => orders.push({ docId: doc.id, ...doc.data() }));
 
-        const menuSnapshot = await db.collection('menu').get();
-        let menu = [];
-        menuSnapshot.forEach(doc => menu.push({ docId: doc.id, ...doc.data() }));
-
-        // Stats
+        // Update Total Orders Metric
         const totalOrdersEl = document.getElementById('stat-total-orders');
         if (totalOrdersEl) totalOrdersEl.innerText = orders.length;
 
+        // Update Total Revenue Metric
         let revenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
         const totalRevEl = document.getElementById('stat-total-revenue');
         if (totalRevEl) totalRevEl.innerText = `GH₵ ${revenue.toFixed(2)}`;
 
-        const totalMenuEl = document.getElementById('stat-total-menu');
-        if (totalMenuEl) totalMenuEl.innerText = menu.length;
-
-        // Render Orders Table
+        // Render Orders Table with Live Status Selection Dropdown
         const ordersList = document.getElementById('admin-orders-list');
         if (ordersList) {
             ordersList.innerHTML = '';
@@ -309,13 +305,30 @@ async function renderAdminDashboard() {
                     <td>${o.customer}</td>
                     <td>${o.items}</td>
                     <td>GH₵ ${(o.total || 0).toFixed(2)}</td>
-                    <td><span style="color: ${o.status === 'Delivered' ? 'green' : 'orange'}; font-weight: bold;">${o.status}</span></td>
+                    <td>
+                        <select onchange="updateOrderStatus('${o.docId}', this.value)" style="padding: 6px; border-radius: 4px; font-weight: bold; cursor: pointer; color: ${o.status === 'Delivered' ? 'green' : 'orange'};">
+                            <option value="Pending" ${o.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                            <option value="Processing" ${o.status === 'Processing' ? 'selected' : ''}>Processing</option>
+                            <option value="Out for Delivery" ${o.status === 'Out for Delivery' ? 'selected' : ''}>Out for Delivery</option>
+                            <option value="Delivered" ${o.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                        </select>
+                    </td>
                 `;
                 ordersList.appendChild(tr);
             });
         }
+    });
 
-        // Render Menu Management Grid
+    // Real-time listener for Menu Management
+    db.collection('menu').onSnapshot(menuSnapshot => {
+        let menu = [];
+        menuSnapshot.forEach(doc => menu.push({ docId: doc.id, ...doc.data() }));
+
+        // Update Menu Item Count Metric
+        const totalMenuEl = document.getElementById('stat-total-menu');
+        if (totalMenuEl) totalMenuEl.innerText = menu.length;
+
+        // Render Admin Menu Grid
         const adminMenuList = document.getElementById('admin-menu-list');
         if (adminMenuList) {
             adminMenuList.innerHTML = '';
@@ -323,7 +336,7 @@ async function renderAdminDashboard() {
                 const div = document.createElement('div');
                 div.className = 'menu-card';
                 div.innerHTML = `
-                    <img src="${m.image}" alt="${m.name}" style="height:120px;">
+                    <img src="${m.image}" alt="${m.name}" style="height:120px; object-fit: cover;">
                     <div class="menu-card-body">
                         <h4>${m.name}</h4>
                         <p>GH₵ ${m.price}</p>
@@ -333,8 +346,16 @@ async function renderAdminDashboard() {
                 adminMenuList.appendChild(div);
             });
         }
+    });
+}
+
+// Function to update order status directly in Firestore
+async function updateOrderStatus(docId, newStatus) {
+    try {
+        await db.collection('orders').doc(docId).update({ status: newStatus });
     } catch (error) {
-        console.error("Error loading admin dashboard:", error);
+        console.error("Error updating order status: ", error);
+        alert("Failed to update status.");
     }
 }
 
@@ -375,7 +396,6 @@ function setupAddMenuForm() {
             await db.collection('menu').add(newItem);
             alert('Menu item added successfully!');
             form.reset();
-            renderAdminDashboard();
         } catch (error) {
             console.error("Error adding menu item: ", error);
             alert("Failed to add menu item.");
@@ -387,7 +407,6 @@ async function deleteMenuItem(docId) {
     if (confirm('Are you sure you want to delete this menu item?')) {
         try {
             await db.collection('menu').doc(docId).delete();
-            renderAdminDashboard();
         } catch (error) {
             console.error("Error deleting menu item: ", error);
             alert("Failed to delete item.");
