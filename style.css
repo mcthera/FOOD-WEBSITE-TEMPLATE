@@ -709,6 +709,94 @@ th {
     }
 }
 /* ==========================================
+   MOBILE RESPONSIVE STYLES FOR ADMIN PAGE
+   ========================================== */
+
+@media (max-width: 768px) {
+    /* Stack the sidebar on top of the main container */
+    body.admin-body {
+        flex-direction: column !important;
+        height: auto !important;
+        overflow-x: hidden;
+    }
+
+    /* Transform sidebar into a top header navigation bar */
+    .sidebar {
+        width: 100% !important;
+        height: auto !important;
+        position: relative !important;
+        padding: 15px 20px !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .sidebar h2 {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+
+    /* Lay out sidebar tabs horizontally on mobile */
+    .sidebar ul {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .sidebar ul li {
+        margin-bottom: 0 !important;
+    }
+
+    .sidebar ul li a {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+
+    /* Reset main content margins and padding */
+    .admin-main {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 15px !important;
+    }
+
+    /* Adjust top dashboard header layout */
+    .admin-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 10px;
+    }
+
+    /* Make stats cards stack or shrink cleanly */
+    .admin-stats-grid {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+
+    /* Make tables horizontally scrollable so content doesn't break layout */
+    .admin-table-container {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .admin-table {
+        min-width: 600px; /* Forces scrollable container instead of clipping */
+    }
+
+    /* Make the admin form and inputs full width */
+    .admin-form {
+        width: 100% !important;
+        padding: 15px !important;
+    }
+
+    /* Make login modal fit snug on small phones */
+    .login-card {
+        width: 90% !important;
+        padding: 20px !important;
+        margin: 20px;
+    }
+}
+/* ==========================================
    STICKY FLOATING WHATSAPP BUTTON STYLES
    ================================          */
 .global-whatsapp-float {
