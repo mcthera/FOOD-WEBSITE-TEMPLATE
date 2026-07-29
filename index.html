@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daytime Meals - Tasty and Delicious</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="logo">
+            <h2>Daytime <span>Meals</span></h2>
+        </div>
+        <nav class="nav-links">
+            <a href="index.html" class="active">Home</a>
+            <a href="menu.html">Menu</a>
+            <a href="admin.html">Admin</a>
+        </nav>
+        <div class="nav-actions">
+            <button id="cart-btn" class="cart-btn"><i class="fa-solid fa-cart-shopping"></i> <span id="cart-count">0</span></button>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Tasty and <span>Delicious</span> Local Dishes</h1>
+            <p>Freshly prepared local dishes, takeaway, home delivery, event catering, and affordable daily lunch packs.</p>
+            <div class="hero-btns">
+                <a href="menu.html" class="btn btn-primary">Explore Menu</a>
+                <a href="tel:0541604633" class="btn btn-secondary"><i class="fa-solid fa-phone"></i> Call to Order</a>
+            </div>
+        </div>
+        <div class="hero-image">
+            <img src="FD.jpeg" alt="Daytime Meals Signage">
+        </div>
+    </section>
+
+    <section class="services">
+        <h2>Our Services</h2>
+        <div class="services-grid">
+            <div class="service-card">
+                <i class="fa-solid fa-utensils"></i>
+                <h3>Freshly Prepared Local Dishes</h3>
+                <p>Enjoy authentic, piping hot meals made with the freshest local ingredients.</p>
+            </div>
+            <div class="service-card">
+                <i class="fa-solid fa-motorcycle"></i>
+                <h3>Takeaway & Home Delivery</h3>
+                <p>Quick doorstep delivery right to your office or home.</p>
+            </div>
+            <div class="service-card">
+                <i class="fa-solid fa-calendar-days"></i>
+                <h3>Event & Party Catering</h3>
+                <p>Make your special occasions memorable with our professional catering services.</p>
+            </div>
+            <div class="service-card">
+                <i class="fa-solid fa-box-open"></i>
+                <h3>Affordable Daily Lunch Packs</h3>
+                <p>Convenient, budget-friendly lunch packages for busy workdays.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <div>
+                <h3>Daytime Meals</h3>
+                <p>Tasty and delicious food right at your doorstep.</p>
+            </div>
+            <div>
+                <h3>Contact Us</h3>
+                <p><i class="fa-solid fa-phone"></i> 0541 604 633 / 0204 516 007</p>
+                <p><i class="fa-solid fa-location-dot"></i> Santasi Opp. Santasi Bas School</p>
+            </div>
+        </div>
+        <p class="copyright">&copy; 2026 Daytime Meals. All rights reserved.</p>
+    </footer>
+
+    <div id="cart-drawer" class="cart-drawer">
+        <div class="cart-header">
+            <h3>Your Cart</h3>
+            <button id="close-cart"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="cart-items" class="cart-items">
+            </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span id="cart-total-price">GH₵ 0.00</span>
+            </div>
+            <button id="checkout-btn" class="btn btn-primary btn-block">Checkout via WhatsApp</button>
+             <button id="checkout-btn" class="whatsapp-float">
+                 <i class="fa-brands fa-whatsapp"></i>
+            </button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
