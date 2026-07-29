@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -85,17 +85,13 @@
             <h3>Your Cart</h3>
             <button id="close-cart"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <div id="cart-items" class="cart-items">
-            </div>
+        <div id="cart-items" class="cart-items"></div>
         <div class="cart-footer">
             <div class="cart-total">
                 <span>Total:</span>
                 <span id="cart-total-price">GH₵ 0.00</span>
             </div>
-            <button id="checkout-btn" class="btn btn-primary btn-block">Checkout via WhatsApp</button>
-             <button id="checkout-btn" class="whatsapp-float">
-                 <i class="fa-brands fa-whatsapp"></i>
-            </button>
+            <button id="checkout-btn" class="btn btn-primary btn-block"><i class="fa-brands fa-whatsapp"></i> Checkout via WhatsApp</button>
         </div>
     </div>
 
