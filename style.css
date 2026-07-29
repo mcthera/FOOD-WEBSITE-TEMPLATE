@@ -708,6 +708,34 @@ th {
         gap: 30px;
     }
 }
+/* ==========================================
+   STICKY FLOATING WHATSAPP BUTTON STYLES
+   ================================          */
+.global-whatsapp-float {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background-color: #25d366;
+    color: #ffffff;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 30px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.global-whatsapp-float:hover {
+    background-color: #20ba5a;
+    transform: scale(1.1);
+    color: #ffffff;
+}
 
 /* Small Phones (Width <= 480px) */
 @media (max-width: 480px) {
