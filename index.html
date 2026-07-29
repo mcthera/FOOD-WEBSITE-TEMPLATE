@@ -99,6 +99,25 @@
         </div>
     </div>
 
+    <div id="checkout-modal" class="login-modal" style="display: none;">
+        <div class="login-card" style="max-width: 400px; text-align: left;">
+            <h2>Complete Order</h2>
+            <p style="margin-bottom: 15px;">Please enter your name & phone number:</p>
+            <form id="customer-details-form">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="cust-name" placeholder="e.g. Ama Serwaa" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="tel" id="cust-phone" placeholder="e.g. 0241234567" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" style="width: 100%; margin-top: 10px;">Proceed to WhatsApp</button>
+                <button type="button" id="close-cust-modal" class="btn btn-secondary btn-block" style="width: 100%; margin-top: 10px; background: #ddd; border: none; cursor: pointer; padding: 10px; border-radius: 4px;">Cancel</button>
+            </form>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
