@@ -615,6 +615,29 @@ th {
     font-size: 0.95rem;
 }
 
+/* Floating Google Map Button */
+.floating-map-btn {
+    position: fixed;
+    bottom: 95px; /* Adjust this so it sits nicely above or next to your WhatsApp button */
+    right: 20px;
+    background-color: #25D366; /* You can change this to red or blue if you prefer */
+    color: white;
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    transition: transform 0.3s ease;
+}
+
+.floating-map-btn:hover {
+    transform: scale(1.1);
+}
+
 
 /* ==========================================
    MOBILE RESPONSIVENESS MEDIA QUERIES
