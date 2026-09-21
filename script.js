@@ -16,7 +16,7 @@ if (!firebase.apps.length) {
 }
 const db = firebase.firestore();
 
-// Default Menu Data (used to seed Firestore if collection is empty)
+// Default menu shown until JSONBin is configured or when it is unavailable.
 const defaultMenu = [
     { id: 1, name: "Signature Jollof Rice & Grilled Chicken", category: "Rice", price: 55, image: "FD.jpeg" },
     { id: 2, name: "Fried Rice with Chicken Drumsticks", category: "Rice", price: 50, image: "FD.jpeg" },
@@ -122,19 +122,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// Seed Firestore with default menu/orders if empty
+// Orders remain in Firestore. Menu data is managed in JSONBin.
 async function initializeFirestoreData() {
     try {
-        const menuSnapshot = await db.collection('menu').get();
-        if (menuSnapshot.empty) {
-            const batch = db.batch();
-            defaultMenu.forEach(item => {
-                const docRef = db.collection('menu').doc(item.id.toString());
-                batch.set(docRef, item);
-            });
-            await batch.commit();
-        }
-
         const ordersSnapshot = await db.collection('orders').get();
         if (ordersSnapshot.empty) {
             await db.collection('orders').add({
@@ -205,11 +195,8 @@ async function renderMenu(category) {
     menuGrid.innerHTML = '<p>Loading menu...</p>';
 
     try {
-        const snapshot = await db.collection('menu').get();
+        const menuItems = await getMenuItems();
         menuGrid.innerHTML = '';
-        
-        let menuItems = [];
-        snapshot.forEach(doc => menuItems.push({ docId: doc.id, ...doc.data() }));
 
         const filtered = category === 'all' ? menuItems : menuItems.filter(item => item.category === category);
 
@@ -221,7 +208,7 @@ async function renderMenu(category) {
                 <div class="menu-card-body">
                     <h3>${item.name}</h3>
                     <div class="menu-price">GH₵ ${item.price.toFixed(2)}</div>
-                    <button onclick="addToCart('${item.docId}', '${item.name}', ${item.price})" class="btn btn-primary">Add to Cart</button>
+                    <button onclick="addToCart('${item.id}', '${item.name}', ${item.price})" class="btn btn-primary">Add to Cart</button>
                 </div>
             `;
             menuGrid.appendChild(card);
@@ -349,9 +336,7 @@ function initRealtimeAdminDashboard() {
         }
     });
 
-    db.collection('menu').onSnapshot(menuSnapshot => {
-        let menu = [];
-        menuSnapshot.forEach(doc => menu.push({ docId: doc.id, ...doc.data() }));
+    getMenuItems().then(menu => {
 
         const totalMenuEl = document.getElementById('stat-total-menu');
         if (totalMenuEl) totalMenuEl.innerText = menu.length;
@@ -359,21 +344,9 @@ function initRealtimeAdminDashboard() {
         const adminMenuList = document.getElementById('admin-menu-list');
         if (adminMenuList) {
             adminMenuList.innerHTML = '';
-            menu.forEach(m => {
-                const div = document.createElement('div');
-                div.className = 'menu-card';
-                div.innerHTML = `
-                    <img src="${m.image}" alt="${m.name}" style="height:120px; object-fit: cover;">
-                    <div class="menu-card-body">
-                        <h4>${m.name}</h4>
-                        <p>GH₵ ${m.price}</p>
-                        <button onclick="deleteMenuItem('${m.docId}')" class="btn btn-secondary" style="margin-top: 10px; padding: 5px 10px; font-size: 0.85rem;">Delete</button>
-                    </div>
-                `;
-                adminMenuList.appendChild(div);
-            });
+            refreshAdminMenu(menu);
         }
-    });
+    }).catch(error => console.error("Error loading admin menu: ", error));
 }
 
 async function updateOrderStatus(docId, newStatus) {
@@ -415,28 +388,46 @@ function setupAdminTabs() {
 function setupAddMenuForm() {
     const form = document.getElementById('add-menu-form');
     if (!form) return;
+    const imageInput = document.getElementById('new-image');
+    const imagePreview = document.getElementById('image-preview');
+    const submitButton = document.getElementById('add-menu-submit');
+
+    imageInput.addEventListener('change', () => {
+        const file = imageInput.files[0];
+        if (!file) {
+            imagePreview.hidden = true;
+            return;
+        }
+        imagePreview.src = URL.createObjectURL(file);
+        imagePreview.hidden = false;
+    });
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = document.getElementById('new-name').value;
         const category = document.getElementById('new-category').value;
         const price = parseFloat(document.getElementById('new-price').value);
-        const image = document.getElementById('new-image').value;
+        const file = imageInput.files[0];
 
-        const newItem = {
-            id: Date.now(),
-            name,
-            category,
-            price,
-            image
-        };
+        if (!file) return setMenuFormStatus('Please choose a meal picture.', true);
+        submitButton.disabled = true;
+        setMenuFormStatus('Uploading picture...');
 
         try {
-            await db.collection('menu').add(newItem);
+            const image = await uploadImageToCloudinary(file);
+            const menu = await getMenuItems();
+            menu.push({ id: Date.now(), name, category, price, image });
+            await saveMenuItems(menu);
             alert('Menu item added successfully!');
             form.reset();
+            imagePreview.hidden = true;
+            setMenuFormStatus('Menu item added successfully.');
+            refreshAdminMenu(menu);
         } catch (error) {
             console.error("Error adding menu item: ", error);
-            alert("Failed to add menu item.");
+            setMenuFormStatus(error.message || "Failed to add menu item.", true);
+        } finally {
+            submitButton.disabled = false;
         }
     });
 }
@@ -444,10 +435,91 @@ function setupAddMenuForm() {
 async function deleteMenuItem(docId) {
     if (confirm('Are you sure you want to delete this menu item?')) {
         try {
-            await db.collection('menu').doc(docId).delete();
+            const menu = (await getMenuItems()).filter(item => String(item.id) !== String(docId));
+            await saveMenuItems(menu);
+            refreshAdminMenu(menu);
         } catch (error) {
             console.error("Error deleting menu item: ", error);
             alert("Failed to delete item.");
         }
     }
+}
+
+function isConfigured(value) {
+    return value && !value.startsWith('YOUR_');
+}
+
+function jsonBinHeaders() {
+    return {
+        'Content-Type': 'application/json',
+        'X-Master-Key': appConfig.jsonBinApiKey,
+        'X-Bin-Meta': 'false'
+    };
+}
+
+async function getMenuItems() {
+    if (!isConfigured(appConfig.jsonBinId) || !isConfigured(appConfig.jsonBinApiKey)) return [...defaultMenu];
+
+    const response = await fetch(`https://api.jsonbin.io/v3/b/${appConfig.jsonBinId}/latest`, {
+        headers: jsonBinHeaders()
+    });
+    if (!response.ok) throw new Error('Could not load the online menu.');
+    const data = await response.json();
+    return Array.isArray(data) ? data : (data.record || defaultMenu);
+}
+
+async function saveMenuItems(menu) {
+    if (!isConfigured(appConfig.jsonBinId) || !isConfigured(appConfig.jsonBinApiKey)) {
+        throw new Error('Configure JSONBin in config.js before saving menu items.');
+    }
+
+    const response = await fetch(`https://api.jsonbin.io/v3/b/${appConfig.jsonBinId}`, {
+        method: 'PUT',
+        headers: jsonBinHeaders(),
+        body: JSON.stringify(menu)
+    });
+    if (!response.ok) throw new Error('Could not save the menu online.');
+}
+
+async function uploadImageToCloudinary(file) {
+    if (!isConfigured(appConfig.cloudinaryCloudName) || !isConfigured(appConfig.cloudinaryUploadPreset)) {
+        throw new Error('Configure Cloudinary in config.js before uploading pictures.');
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', appConfig.cloudinaryUploadPreset);
+    const response = await fetch(`https://api.cloudinary.com/v1_1/${appConfig.cloudinaryCloudName}/image/upload`, {
+        method: 'POST',
+        body: formData
+    });
+    if (!response.ok) throw new Error('Picture upload failed.');
+    const data = await response.json();
+    return data.secure_url;
+}
+
+function setMenuFormStatus(message, isError = false) {
+    const status = document.getElementById('menu-form-status');
+    if (status) {
+        status.textContent = message;
+        status.className = `form-status${isError ? ' is-error' : ''}`;
+    }
+}
+
+function refreshAdminMenu(menu) {
+    const adminMenuList = document.getElementById('admin-menu-list');
+    if (!adminMenuList) return;
+    adminMenuList.innerHTML = '';
+    menu.forEach(m => {
+        const div = document.createElement('div');
+        div.className = 'menu-card';
+        div.innerHTML = `
+            <img src="${m.image}" alt="${m.name}" style="height:120px; object-fit: cover;">
+            <div class="menu-card-body">
+                <h4>${m.name}</h4>
+                <p>GH₵ ${m.price}</p>
+                <button onclick="deleteMenuItem('${m.id}')" class="btn btn-secondary" style="margin-top: 10px; padding: 5px 10px; font-size: 0.85rem;">Delete</button>
+            </div>`;
+        adminMenuList.appendChild(div);
+    });
 }
